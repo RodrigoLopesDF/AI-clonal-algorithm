@@ -1,4 +1,3 @@
-from inspect import indentsize
 import math
 import numpy as np
 import pandas as pd
@@ -95,6 +94,7 @@ class ClonalAlgorithym():
             worst_value,avg_value,best_value = self.get_indexes(fitness_ranking,result,N)
             adapted_population = self.clone_and_mutate(w,N,fitness_ranking,cloning_rate,clone_amount,mutation_rate)
             fittest_population = self.select(adapted_population,N)
+            #TODO colocal novo grupo com grupo atual, e criar graficos para o sistema
 
 if __name__ == "__main__":
 
