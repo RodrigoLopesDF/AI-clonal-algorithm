@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 import random
+import matplotlib.pyplot as plt
 
 class ClonalAlgorithym():
     
@@ -88,14 +89,18 @@ class ClonalAlgorithym():
         N = sample_size
         w = self.generate_samples(N)
         worse_fit,best_fit,avg_fit = ([],[],[])
+        populations = []
 
         for iteration in range(n_iterations):
             fitness_ranking,result = self.linear_ranking(w,N)
             worst_value,avg_value,best_value = self.get_indexes(fitness_ranking,result,N)
             adapted_population = self.clone_and_mutate(w,N,fitness_ranking,cloning_rate,clone_amount,mutation_rate)
             fittest_population = self.select(adapted_population,N)
-            #TODO colocal novo grupo com grupo atual, e criar graficos para o sistema
+            
+        populations.append(fittest_population)
+        return populations
 
+    
 if __name__ == "__main__":
 
     # Inicializando o algoritmo genético
