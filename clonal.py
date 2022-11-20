@@ -8,7 +8,7 @@ class ClonalAlgorithym():
     
     def __init__(self):
         # Escolhendo uma "seed" para a geração de números
-        np.random.seed(1)
+        np.random.seed(2)
 
     def generate_samples(self, N):
         return np.random.uniform(low=-10, high=10, size=(2,N)).transpose()
@@ -52,40 +52,48 @@ class ClonalAlgorithym():
  
        return worst_value,avg_value,best_value
    
-    def clone(self,group,cloning_rate):
-       return(list(np.repeat(group, cloning_rate)))
+    def clone(self,pair,cloning_rate):
+        return np.array([pair for i in range(cloning_rate)])
     
     def mutate(self,pair):
         x,y = pair
-        return x+random.uniform(-1,1),y+random.uniform(-1,1)
-    
-    def clone_and_mutate(self,population,size,fitness_ranking,cloning_rate,clone_amount,mutation_rate):
-        fittest_group = fitness_ranking[0:clone_amount-1]
-        clones = self.clone(fittest_group,cloning_rate)
-        new_population_indexes = clones + [*range(size)]
-        new_population = []
+        new_x,new_y = x+random.uniform(-1,1),y+random.uniform(-1,1)
         
-        mtt_const = (2*mutation_rate)/(size*(size+1))
-        for pair in new_population_indexes:
-            mtt_chance = mtt_const*(fitness_ranking.index(pair)+1)
-            mtt_chance = 1 if(mtt_chance>1) else mtt_chance
-
-            if(mtt_chance>=random.random()):
-                new_population.append(self.mutate(population[pair]))
-            else:
-                new_population.append(population[pair])
-        newest_population = np.array(new_population)
-         
-        return newest_population
+        new_x = 10 if (new_x >= 10) else -10 if (new_x <= -10) else new_x
+        new_y = 10 if (new_y >= 10) else -10 if (new_y <= -10) else new_y
+        
+        return new_x,new_y
     
-    def select(self,population,limit):
-        size = math.floor(population.size/2)
-        fitness_ranking,result = self.linear_ranking(population,size)
-        fittest_group = np.array([population[pair] for pair in fitness_ranking[0:limit]])
+    def clone_and_mutate(self,population,size,fitness_ranking,cloning_rate,mutation_rate):
+        best_fitness = size
+        ro = mutation_rate
+        
+        best_clones = []
+        for pair_index in range(size):
+            pair = population[pair_index]
+            fitness = size-fitness_ranking.index(pair_index)
+            
+            clones = self.clone(pair,cloning_rate)
+            mutated_clones = []
+            
+            for cloned_pair in clones:
+                D = fitness/best_fitness
+                alpha = math.exp(-ro*D)
 
-        return fittest_group
+                if(alpha>=random.random()):
+                    mutated_clones.append(self.mutate(cloned_pair))
+                else:
+                    mutated_clones.append(cloned_pair)
+            mutated_clones.append(pair)
+            
+            mutated_clones = np.array(mutated_clones)
+            clone_fitness,clone_result = self.linear_ranking(mutated_clones,cloning_rate+1)
+            best_clones.append(mutated_clones[clone_fitness[0]])
+        best_clones = np.array(best_clones)
+        
+        return best_clones
     
-    def run(self,sample_size,n_iterations,cloning_rate,clone_amount,mutation_rate):
+    def run(self,sample_size,n_iterations,cloning_rate,mutation_rate):
         N = sample_size
         w = self.generate_samples(N)
         worse_fit,best_fit,avg_fit = ([],[],[])
@@ -94,9 +102,8 @@ class ClonalAlgorithym():
         for iteration in range(n_iterations):
             fitness_ranking,result = self.linear_ranking(w,N)
             worst_value,avg_value,best_value = self.get_indexes(fitness_ranking,result,N)
-            adapted_population = self.clone_and_mutate(w,N,fitness_ranking,cloning_rate,clone_amount,mutation_rate)
-            fittest_population = self.select(adapted_population,N)
-            
+            fittest_population = self.clone_and_mutate(w,N,fitness_ranking,cloning_rate,mutation_rate)
+            w = fittest_population
         populations.append(fittest_population)
         return populations
 
@@ -105,4 +112,4 @@ if __name__ == "__main__":
 
     # Inicializando o algoritmo genético
     ca = ClonalAlgorithym()
-    ca.run(sample_size=3,n_iterations=1,cloning_rate=2,clone_amount=2,mutation_rate=2)
+    ca.run(sample_size=3,n_iterations=1,cloning_rate=2,mutation_rate=2)
